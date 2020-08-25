@@ -524,15 +524,10 @@ class AutoEncoderVAEGrey(nn.Module):
 
 
 if __name__ == '__main__':
-    # ae = AutoEncoderWMGrey()
-    ae = AutoEncoderVAEGrey()
-    # ae.load_state_dict(torch.load('/home/annika/Bachelorarbeit/Evaluationsergebnisse/AutoEncoder_RGB_1/Q*Bert_JustQBert/!Episode1/ae.pt'))
-    # ae.load_state_dict(torch.load('/home/annika/Bachelorarbeit/Evaluationsergebnisse/AutoEncoder_RGB_1/Q*Bert_Mixed/!!Episode1/ae.pt'))
-    # ae.load_state_dict(torch.load('/home/annika/Bachelorarbeit/Evaluationsergebnisse/AutoEncoder_RGB_1/SpaceInvaders/!Episode2/ae.pt'))
-    # ae.load_state_dict(torch.load('/home/annika/Bachelorarbeit/Evaluationsergebnisse/AutoEncoder_GS_1/Q*Bert_Mixed/!Episode1/ae.pt'))
-    ae.load_state_dict(
-        torch.load('AutoEncoder_GS_4/Q*Bert_Mixed/!Episode1/ae.pt'))
-    # ae.load_state_dict(torch.load('/home/annika/Bachelorarbeit/Evaluationsergebnisse/AutoEncoder_GS_1/SpaceInvaders/!Episode3/ae.pt'))
+    # ae = AutoEncoderVAEGrey()
+    # ae.load_state_dict(torch.load('AutoEncoder_GS_4/Q*Bert_Mixed/!Episode1/ae.pt'))
+    ae = AutoEncoderVAE()
+    ae.load_state_dict(torch.load('AutoEncoder_RGB_4/Q*Bert_JustQBert/!Episode/ae.pt'))
     ae.eval()
 
     # datasetTest = load('/home/annika/BA-Datensaetze/SmallDataset_JustQBert/smallDatasetTest_JustQBert.npy')
@@ -573,9 +568,10 @@ if __name__ == '__main__':
     """Grey"""
 
     import gym
+
     env = gym.make('QbertNoFrameskip-v4')
-    video_obs = cv2.VideoWriter('obs.avi', cv2.VideoWriter_fourcc(*'PIM1'), 25, (160, 210), False)
-    video_pred = cv2.VideoWriter('pred.avi', cv2.VideoWriter_fourcc(*'PIM1'), 25, (160, 210), False)
+    video_obs = cv2.VideoWriter('obs.avi', cv2.VideoWriter_fourcc(*'PIM1'), 25, (160, 210), True)
+    video_pred = cv2.VideoWriter('pred.avi', cv2.VideoWriter_fourcc(*'PIM1'), 25, (160, 210), True)
     for _ in range(1):
         ob = env.reset()
         done = False
@@ -584,28 +580,30 @@ if __name__ == '__main__':
             step += 1
             img = env.render(mode="rgb_array")
             observation, reward, done, info = env.step(env.action_space.sample())  # take a random action
-            imgGrey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # imgGrey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             imgArray = []
-            imgGrey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            imgArray.append(asarray(imgGrey))
-            imgGrey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            imgArray.append(asarray(imgGrey))
+            # imgGrey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            imgArray.append(asarray(img))
+            # imgGrey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            imgArray.append(asarray(img))
 
             # x = np.random.randint(255, size=(210, 160)).astype('uint8')
-            data_obs = imgGrey.reshape(210, 160).astype(np.uint8)
+            # data_obs = img.reshape(210, 160).astype(np.uint8)
+            data_obs = img.astype(np.uint8)
             video_obs.write(data_obs)
 
-            frame = getFrameGrey(np.array(imgArray), 1)
+            # frame = getFrameGrey(np.array(imgArray), 1)
+            frame = getFrame(np.array(imgArray), 1)
             pred = ae(frame)
             pred = pred.permute(0, 2, 3, 1)
             frame = frame.permute(0, 2, 3, 1)
             yay = torch.tensor([255], dtype=torch.int)
             imgFrame = frame * yay
             imgpred = pred * yay
-            data_pred = imgpred[0].reshape(210, 160).detach().cpu().numpy().astype(np.uint8)
+            # data_pred = imgpred[0].reshape(210, 160).detach().cpu().numpy().astype(np.uint8)
+            data_pred = imgpred[0].detach().cpu().numpy().astype(np.uint8)
             video_pred.write(data_pred)
             print("step " + str(step))
-
 
     env.close()
 

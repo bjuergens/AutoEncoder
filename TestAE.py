@@ -66,11 +66,20 @@ class FeatureExtractor:
         self.ae = AutoEncoderVAE()
         self.ae.load_state_dict(torch.load('AutoEncoder_RGB_4/Q*Bert_JustQBert/Episode4/ae.pt'))
         self.ae.eval()
+        self.last = np.zeros(30)
+        self.first = None
+        self.count = 0
 
     def extract(self, obs):
         frame = self.frame2tensor(obs)
         pred, features = self.ae(frame)
-        return features.detach().cpu().numpy().flatten()
+        features = features.detach().cpu().numpy().flatten()
+        self.count += 1
+        if self.count < 10:
+            self.first = features
+        diff = features - self.first
+        # diff *= 10e1
+        return diff
 
     def rencode(self, obs):
         frame = self.frame2tensor(obs)
@@ -117,7 +126,7 @@ if __name__ == '__main__':
             video_pred.write(fe.rencode(observation))
             video_feat.write(feature2img(fe.extract(observation)))
             print("step " + str(step))
-            if step > 10:
+            if step > 300:
                 # done = True
                 pass
     env.close()
